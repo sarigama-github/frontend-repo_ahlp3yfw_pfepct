@@ -4,13 +4,29 @@ import KeyboardOverlay from './KeyboardOverlay'
 import BackgroundLayers from './BackgroundLayers'
 
 export default function Hero() {
+  const defaultScene = 'https://prod.spline.design/fcD-iW8YZHyBp1qq/scene.splinecode'
   const [bg, setBg] = useState('aurora') // 'aurora' | 'mesh' | 'grid'
+  const [sceneUrl, setSceneUrl] = useState(defaultScene)
+  const [tempUrl, setTempUrl] = useState('')
+
+  const applyScene = () => {
+    if (!tempUrl) return
+    try {
+      // Basic validation for Spline URL shape
+      const u = new URL(tempUrl)
+      if (!u.href.endsWith('.splinecode')) return
+      setSceneUrl(u.href)
+      setTempUrl('')
+    } catch (e) {
+      // ignore invalid URL
+    }
+  }
 
   return (
     <section className="relative w-full h-[68vh] sm:h-[76vh] overflow-hidden">
       {/* 3D scene */}
       <div className="absolute inset-0">
-        <Spline scene="https://prod.spline.design/fcD-iW8YZHyBp1qq/scene.splinecode" style={{ width: '100%', height: '100%' }} />
+        <Spline scene={sceneUrl} style={{ width: '100%', height: '100%' }} />
       </div>
 
       {/* Swappable background accents (non-blocking) */}
@@ -32,17 +48,41 @@ export default function Hero() {
           <KeyboardOverlay />
         </div>
 
-        {/* Simple toggle to switch backgrounds */}
-        <div className="mt-6 flex items-center gap-2 text-xs text-zinc-400">
-          <span>Background:</span>
-          {['aurora','mesh','grid'].map(v => (
+        {/* Controls */}
+        <div className="mt-6 flex flex-col items-center gap-3 text-xs text-zinc-400">
+          {/* Background toggle */}
+          <div className="flex items-center gap-2">
+            <span>Background:</span>
+            {['aurora','mesh','grid'].map(v => (
+              <button
+                key={v}
+                onClick={() => setBg(v)}
+                className={`px-2 py-1 rounded border transition-colors ${bg===v ? 'border-cyan-400 text-white' : 'border-white/10 hover:border-white/30'}`}
+                aria-label={`Set background ${v}`}
+              >{v}</button>
+            ))}
+          </div>
+
+          {/* Spline scene swapper */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <span className="whitespace-nowrap">Change 3D model:</span>
+            <input
+              value={tempUrl}
+              onChange={e => setTempUrl(e.target.value)}
+              placeholder="Paste Spline .splinecode URL"
+              className="w-full sm:w-80 px-3 py-2 rounded bg-black/40 border border-white/10 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+            />
             <button
-              key={v}
-              onClick={() => setBg(v)}
-              className={`px-2 py-1 rounded border transition-colors ${bg===v ? 'border-cyan-400 text-white' : 'border-white/10 hover:border-white/30'}`}
-              aria-label={`Set background ${v}`}
-            >{v}</button>
-          ))}
+              onClick={applyScene}
+              className="px-3 py-2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors"
+            >Apply</button>
+            {sceneUrl !== defaultScene && (
+              <button
+                onClick={() => setSceneUrl(defaultScene)}
+                className="px-3 py-2 rounded bg-white/5 text-white/90 border border-white/10 hover:bg-white/10 transition-colors"
+              >Reset</button>
+            )}
+          </div>
         </div>
       </div>
     </section>
