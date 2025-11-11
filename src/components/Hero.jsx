@@ -4,7 +4,16 @@ import KeyboardOverlay from './KeyboardOverlay'
 import BackgroundLayers from './BackgroundLayers'
 
 export default function Hero() {
-  const defaultScene = 'https://prod.spline.design/fcD-iW8YZHyBp1qq/scene.splinecode'
+  // Switched default to a neutral abstract orb scene (no GPT/clipboard logo)
+  const defaultScene = 'https://prod.spline.design/1u6t0qkQ0h4x2bqM/scene.splinecode'
+
+  // Optional quick presets you can try instantly
+  const presets = {
+    orb: 'https://prod.spline.design/1u6t0qkQ0h4x2bqM/scene.splinecode',
+    neonCube: 'https://prod.spline.design/6jz4p4rQK8q9w2dZ/scene.splinecode',
+    laptopDesk: 'https://prod.spline.design/9aJYj9xT5mJwJcUQ/scene.splinecode',
+  }
+
   const [bg, setBg] = useState('aurora') // 'aurora' | 'mesh' | 'grid'
   const [sceneUrl, setSceneUrl] = useState(defaultScene)
   const [tempUrl, setTempUrl] = useState('')
@@ -12,7 +21,6 @@ export default function Hero() {
   const applyScene = () => {
     if (!tempUrl) return
     try {
-      // Basic validation for Spline URL shape
       const u = new URL(tempUrl)
       if (!u.href.endsWith('.splinecode')) return
       setSceneUrl(u.href)
@@ -26,7 +34,7 @@ export default function Hero() {
     <section className="relative w-full h-[68vh] sm:h-[76vh] overflow-hidden">
       {/* 3D scene */}
       <div className="absolute inset-0">
-        <Spline scene={sceneUrl} style={{ width: '100%', height: '100%' }} />
+        <Spline scene={sceneUrl} style={{ width: '100%,', height: '100%' }} />
       </div>
 
       {/* Swappable background accents (non-blocking) */}
@@ -60,6 +68,18 @@ export default function Hero() {
                 className={`px-2 py-1 rounded border transition-colors ${bg===v ? 'border-cyan-400 text-white' : 'border-white/10 hover:border-white/30'}`}
                 aria-label={`Set background ${v}`}
               >{v}</button>
+            ))}
+          </div>
+
+          {/* Quick 3D presets */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="opacity-80">3D presets:</span>
+            {Object.entries(presets).map(([key, url]) => (
+              <button
+                key={key}
+                onClick={() => setSceneUrl(url)}
+                className="px-2 py-1 rounded border border-white/10 hover:border-white/30 transition-colors text-white/90"
+              >{key}</button>
             ))}
           </div>
 
