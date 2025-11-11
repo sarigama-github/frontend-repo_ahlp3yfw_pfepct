@@ -3,18 +3,56 @@ import Spline from '@splinetool/react-spline'
 import KeyboardOverlay from './KeyboardOverlay'
 import BackgroundLayers from './BackgroundLayers'
 
+// Error boundary to keep the hero stable if a Spline scene fails to load
+class SceneErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error, info) {
+    // eslint-disable-next-line no-console
+    console.error('Spline scene failed to load:', error, info)
+  }
+  componentDidUpdate(prevProps) {
+    if (prevProps.sceneUrl !== this.props.sceneUrl && this.state.hasError) {
+      // Reset error state when a new scene is requested
+      this.setState({ hasError: false, error: null })
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/30">
+          <div className="px-3 py-1.5 rounded bg-red-500/10 text-red-300 border border-red-500/30 text-xs">
+            3D scene failed to load
+          </div>
+          <button
+            onClick={() => this.props.onRecover?.()}
+            className="px-3 py-2 rounded bg-white/5 text-white/90 border border-white/10 hover:bg-white/10 transition-colors text-sm"
+          >Use safe preset</button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export default function Hero() {
-  // Default to a holographic cube vibe
+  // Known-good presets
   const presets = {
     orb: 'https://prod.spline.design/1u6t0qkQ0h4x2bqM/scene.splinecode',
-    holographicCube: 'https://prod.spline.design/6jz4p4rQK8q9w2dZ/scene.splinecode',
+    neonCube: 'https://prod.spline.design/Hw0XcQe7IhC6B3rX/scene.splinecode',
     laptopDesk: 'https://prod.spline.design/9aJYj9xT5mJwJcUQ/scene.splinecode',
+    holographicCube: 'https://prod.spline.design/6jz4p4rQK8q9w2dZ/scene.splinecode',
   }
 
-  const defaultScene = presets.holographicCube
+  const safeDefault = presets.orb
 
   const [bg, setBg] = useState('aurora') // 'aurora' | 'mesh' | 'grid'
-  const [sceneUrl, setSceneUrl] = useState(defaultScene)
+  const [sceneUrl, setSceneUrl] = useState(safeDefault)
   const [tempUrl, setTempUrl] = useState('')
 
   const applyScene = () => {
@@ -33,7 +71,12 @@ export default function Hero() {
     <section className="relative w-full h-[68vh] sm:h-[76vh] overflow-hidden">
       {/* 3D scene */}
       <div className="absolute inset-0">
-        <Spline scene={sceneUrl} style={{ width: '100%', height: '100%' }} />
+        <SceneErrorBoundary
+          sceneUrl={sceneUrl}
+          onRecover={() => setSceneUrl(safeDefault)}
+        >
+          <Spline scene={sceneUrl} style={{ width: '100%', height: '100%' }} />
+        </SceneErrorBoundary>
       </div>
 
       {/* Swappable background accents (non-blocking) */}
@@ -95,9 +138,9 @@ export default function Hero() {
               onClick={applyScene}
               className="px-3 py-2 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors"
             >Apply</button>
-            {sceneUrl !== defaultScene && (
+            {sceneUrl !== safeDefault && (
               <button
-                onClick={() => setSceneUrl(defaultScene)}
+                onClick={() => setSceneUrl(safeDefault)}
                 className="px-3 py-2 rounded bg-white/5 text-white/90 border border-white/10 hover:bg-white/10 transition-colors"
               >Reset</button>
             )}
